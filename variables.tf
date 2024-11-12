@@ -1,5 +1,5 @@
 variable "role_name" {
-  description = "Name of the role. If left unset, the role name will be `ih-tf-${var.repo_name}-github`."
+  description = "Name of the role. If left unset, the role name will be `ih-tf-var.repo_name-github`."
   type        = string
   default     = null
 }
