@@ -15,7 +15,7 @@ in the [infrahouse/aws-control](https://github.com/infrahouse/aws-control) repo 
 ```hcl
 module "test-runner" {
   source  = "infrahouse/github-role/aws"
-  version = "1.3.0"
+  version = "1.3.1"
 
   gh_org_name = "infrahouse"
   repo_name   = "aws-control"
