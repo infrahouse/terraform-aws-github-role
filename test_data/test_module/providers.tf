@@ -1,8 +1,11 @@
 provider "aws" {
-  assume_role {
-    role_arn = "arn:aws:iam::303467602807:role/github-role-tester"
+  region = var.region
+  dynamic "assume_role" {
+    for_each = var.role_arn != null ? [1] : []
+    content {
+      role_arn = var.role_arn
+    }
   }
-  region = "us-west-1"
   default_tags {
     tags = {
       "created_by" : "infrahouse/terraform-aws-github-role" # GitHub repository that created a resource

@@ -11,4 +11,5 @@ variable "gh_org_name" {
 
 variable "repo_name" {
   description = "Repository name in GitHub. Without the organization part."
+  type        = string
 }
