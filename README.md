@@ -18,7 +18,7 @@ module "test-runner" {
   version = "1.3.0"
 
   gh_org_name = "infrahouse"
-  repo_name   = "test"
+  repo_name   = "aws-control"
   role_name   = "my-custom-github-role"  # Optional: defaults to ih-tf-{repo_name}-github
 }
 ```
