@@ -14,8 +14,9 @@ The module will create the role. A GitHub Actions worker
 in the [infrahouse/aws-control](https://github.com/infrahouse/aws-control) repo will be able to assume it.
 ```hcl
 module "test-runner" {
-  source      = "infrahouse/github-role/aws"
-  version     = "1.0.0"
+  source  = "infrahouse/github-role/aws"
+  version = "1.2.2"
+
   gh_org_name = "infrahouse"
   repo_name   = "test"
   role_name   = "my-custom-github-role"  # Optional: defaults to ih-tf-{repo_name}-github
