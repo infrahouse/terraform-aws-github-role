@@ -1,7 +1,2 @@
-black ~=24.3
-boto3 ~= 1.26
-infrahouse-toolkit ~= 2.6
-myst-parser ~= 2.0
-pytest ~= 7.3
-Sphinx ~= 6.0
-sphinx-rtd-theme ~= 1.2
+infrahouse-core ~= 0.17
+pytest-infrahouse ~= 0.10
