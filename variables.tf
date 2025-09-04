@@ -13,3 +13,9 @@ variable "repo_name" {
   description = "Repository name in GitHub. Without the organization part."
   type        = string
 }
+
+variable "max_session_duration" {
+  description = "Maximum session duration in seconds for the IAM role."
+  type        = number
+  default     = 3600
+}
