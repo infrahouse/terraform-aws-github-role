@@ -27,7 +27,11 @@ data "aws_iam_policy_document" "github-trust" {
       test     = "StringLike"
       variable = "${local.gha_hostname}:sub"
       values = [
-        "repo:${var.gh_org_name}/${var.repo_name}:*"
+        # Legacy subject claim (mutable org/repo names).
+        "repo:${var.gh_org_name}/${var.repo_name}:*",
+        # Immutable subject claim, mandatory for new/renamed repos from 2026-07-15.
+        # GitHub injects numeric org/repo IDs after an "@": repo:org@<org_id>/repo@<repo_id>:*
+        "repo:${var.gh_org_name}@*/${var.repo_name}@*:*",
       ]
     }
   }
