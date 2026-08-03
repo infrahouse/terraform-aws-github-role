@@ -1,82 +1,78 @@
 # terraform-aws-github-role
-The module creates an IAM role that can be used by a GitHub Action worker.
 
-The role doesn't have any attached policies. Instead, the module returns the role's ARN and name.
-The user is expected to attach necessary policies to the role.
+[![Need Help?](https://img.shields.io/badge/Need%20Help%3F-Contact%20Us-0066CC)](https://infrahouse.com/contact)
+[![Docs](https://img.shields.io/badge/docs-github.io-blue)](https://infrahouse.github.io/terraform-aws-github-role/)
+[![Registry](https://img.shields.io/badge/Terraform-Registry-purple?logo=terraform)](https://registry.terraform.io/modules/infrahouse/github-role/aws/latest)
+[![Release](https://img.shields.io/github/release/infrahouse/terraform-aws-github-role.svg)](https://github.com/infrahouse/terraform-aws-github-role/releases/latest)
+[![AWS IAM](https://img.shields.io/badge/AWS-IAM-orange?logo=amazoniam)](https://aws.amazon.com/iam/)
+[![GitHub Actions](https://img.shields.io/badge/GitHub-Actions-blue?logo=githubactions)](https://docs.github.com/en/actions)
+[![Security](https://img.shields.io/github/actions/workflow/status/infrahouse/terraform-aws-github-role/vuln-scanner-pr.yml?label=Security)](https://github.com/infrahouse/terraform-aws-github-role/actions/workflows/vuln-scanner-pr.yml)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
-## Usage
+This Terraform module creates an AWS IAM role that a GitHub Actions workflow can assume through OpenID
+Connect (OIDC). Workflows in the repository you name exchange their short-lived OIDC token for temporary AWS
+credentials — no access keys stored as repository secrets, nothing to rotate.
 
-Let's say we have a GitHub repo [infrahouse/aws-control](https://github.com/infrahouse/aws-control).
-We want to create a role that we can use in GitHub Actions 
-in the [infrahouse/aws-control](https://github.com/infrahouse/aws-control) repository.
+The module creates the role and its trust policy only. It attaches **no** permission policies; you attach
+exactly what your workflow needs to the returned role.
 
-The module will create the role. A GitHub Actions worker 
-in the [infrahouse/aws-control](https://github.com/infrahouse/aws-control) repo will be able to assume it.
+## Why This Module?
+
+Writing the trust policy by hand is where GitHub OIDC setups usually go wrong: the federated principal, the
+`aud` condition, and the `sub` pattern all have to be exactly right, and a single typo produces an opaque
+`Not authorized to perform sts:AssumeRoleWithWebIdentity`. This module:
+
+- **Gets the trust policy right** — federated principal, audience, and repository subject in one place
+- **Handles GitHub's immutable subject claims** — matches both `repo:org/repo:*` and the newer
+  `repo:org@<org_id>/repo@<repo_id>:*` format that new and renamed repositories receive from 2026-07-15
+- **Stays unopinionated about permissions** — no bundled policies means no accidental over-privilege
+- **Names roles predictably** — `ih-tf-<repo_name>-github` by default, so roles are easy to audit across
+  accounts
+- **Tags what it creates** — `created_by_module` and `module_version` tags make provenance obvious
+
+## Features
+
+- IAM role with a GitHub Actions OIDC trust policy, scoped to one `org/repo`
+- Support for legacy and immutable GitHub subject claims
+- Optional custom role name (`role_name`)
+- Configurable session length (`max_session_duration`, 1 hour by default)
+- Outputs the role name and ARN for policy attachment and workflow configuration
+- Works with AWS provider 5.11+ and 6.x
+
+## Quick Start
+
 ```hcl
-module "test-runner" {
-  source  = "infrahouse/github-role/aws"
+module "github_role" {
+  source  = "registry.infrahouse.com/infrahouse/github-role/aws"
   version = "1.4.0"
 
   gh_org_name = "infrahouse"
   repo_name   = "aws-control"
-  role_name   = "my-custom-github-role"  # Optional: defaults to ih-tf-{repo_name}-github
-}
-```
-Now that we have the role, let's attach the `AdministratorAccess` policy to it. 
-```hcl
-data "aws_iam_policy" "administrator-access" {
-  name     = "AdministratorAccess"
 }
 
-resource "aws_iam_role_policy_attachment" "test-runner-admin-permissions" {
-  policy_arn = data.aws_iam_policy.administrator-access.arn
-  role       = module.test-runner.github_role_name
-}
-```
-
-So, now we have the role that can be authenticated
- in [infrahouse/aws-control](https://github.com/infrahouse/aws-control) and have admin permissions in the AWS account.
-
-## Security Best Practices
-
-> **⚠️ Important**: It is not recommended to grant `AdministratorAccess` to a GitHub Actions worker.
-> The example above is for illustration purposes only.
-
-Follow these security best practices:
-
-- **Principle of Least Privilege**: Only grant the minimum permissions required for your workflow
-- **Use Specific Policies**: Create custom policies or use AWS managed policies that match your specific needs
-- **Environment Separation**: Use different roles for different environments (dev, staging, prod)
-- **Regular Audits**: Periodically review and rotate the permissions attached to your GitHub Actions roles
-- **Conditional Access**: Consider adding conditions to your trust policy to restrict access by branch, repository, or other factors
-
-Example of a more secure policy attachment:
-```hcl
-data "aws_iam_policy" "s3-read-only" {
-  name = "AmazonS3ReadOnlyAccess"
+# The role has no permissions until you attach a policy.
+resource "aws_iam_role_policy_attachment" "github_role_s3" {
+  role       = module.github_role.github_role_name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
 }
 
-resource "aws_iam_role_policy_attachment" "test-runner-s3-permissions" {
-  policy_arn = data.aws_iam_policy.s3-read-only.arn
-  role       = module.test-runner.github_role_name
+output "github_role_arn" {
+  value = module.github_role.github_role_arn
 }
 ```
 
-## Prerequisites
-
-Before using this module, you need to set up an OpenID Connect (OIDC) identity provider in your AWS account for GitHub Actions. You can use the [terraform-aws-gh-identity-provider](https://github.com/infrahouse/terraform-aws-gh-identity-provider) module:
+The module looks up an existing GitHub OIDC identity provider in the account
+(`https://token.actions.githubusercontent.com`). Create it once per AWS account with
+[terraform-aws-gh-identity-provider](https://github.com/infrahouse/terraform-aws-gh-identity-provider):
 
 ```hcl
 module "github_identity_provider" {
-  source = "infrahouse/gh-identity-provider/aws"
+  source  = "registry.infrahouse.com/infrahouse/gh-identity-provider/aws"
+  version = "1.1.1"
 }
 ```
 
-> **Note**: This OIDC provider setup is required only once per AWS account.
-
-## GitHub Actions Usage
-
-Once the role is created and the OIDC provider is set up, you can use it in your GitHub Actions workflows:
+Then use the role in a workflow — `id-token: write` is what lets the runner request an OIDC token:
 
 ```yaml
 name: Deploy to AWS
@@ -91,21 +87,55 @@ jobs:
       id-token: write
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v5
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: us-east-1
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: us-west-2
 
-      - name: Deploy resources
-        run: |
-          # Your deployment commands here
-          aws s3 ls  # Example command using assumed role
+      - name: Verify access
+        run: aws sts get-caller-identity
 ```
 
-> **Note**: Set `AWS_ROLE_ARN` as a repository secret with the value from `module.test-runner.github_role_arn`
+## Documentation
+
+Full documentation is available at
+[infrahouse.github.io/terraform-aws-github-role](https://infrahouse.github.io/terraform-aws-github-role/).
+
+- [Getting Started](https://infrahouse.github.io/terraform-aws-github-role/getting-started/) — prerequisites
+  and first deployment
+- [Architecture](https://infrahouse.github.io/terraform-aws-github-role/architecture/) — how the OIDC trust
+  relationship works
+- [Configuration](https://infrahouse.github.io/terraform-aws-github-role/configuration/) — variable
+  reference
+- [Examples](https://infrahouse.github.io/terraform-aws-github-role/examples/) — common use cases
+- [Security](https://infrahouse.github.io/terraform-aws-github-role/security/) — least privilege and
+  hardening
+- [Troubleshooting](https://infrahouse.github.io/terraform-aws-github-role/troubleshooting/) — common issues
+  and solutions
+
+## Security Best Practices
+
+> **⚠️ Important**: do not grant `AdministratorAccess` to a GitHub Actions role. Anyone who can run a
+> workflow in the repository then effectively owns the AWS account.
+
+- **Least privilege** — attach resource-scoped policies for the exact actions the workflow performs
+- **One role per repository and environment** — separate `staging` and `production`, ideally in separate
+  accounts
+- **Protect privileged workflows** — the role trusts every branch of the repository, so gate deployments
+  with [GitHub environments](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments)
+  and required reviewers
+- **Short sessions** — keep `max_session_duration` as low as the job allows
+- **Audit regularly** — `AssumeRoleWithWebIdentity` events in CloudTrail record which repository and ref used
+  the role
+
+More detail: [Security](https://infrahouse.github.io/terraform-aws-github-role/security/).
+
+## Usage
+
+<!-- BEGIN_TF_DOCS -->
 
 ## Requirements
 
@@ -147,3 +177,19 @@ No modules.
 |------|-------------|
 | <a name="output_github_role_arn"></a> [github\_role\_arn](#output\_github\_role\_arn) | ARN of the IAM role created for GitHub Actions |
 | <a name="output_github_role_name"></a> [github\_role\_name](#output\_github\_role\_name) | Name of the IAM role created for GitHub Actions |
+<!-- END_TF_DOCS -->
+
+## Examples
+
+See the [`examples/`](examples/) directory for complete working examples:
+
+- [`examples/basic`](examples/basic) — a role for one repository with a read-only policy
+- [`examples/least-privilege`](examples/least-privilege) — a deployment role scoped to a single S3 bucket
+
+## Contributing
+
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+## License
+
+This project is licensed under the Apache 2.0 License — see the [LICENSE](LICENSE) file for details.
