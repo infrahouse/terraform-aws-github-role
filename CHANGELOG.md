@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.0] - 2026-08-03
+
+### Bug Fixes
+
+- Accept immutable GitHub OIDC subject claims in trust policy
+- Bump black version and fix formatting
+
+### Features
+
+- Implement Terraform module requirements ([#28](https://github.com/infrahouse/terraform-aws-github-role/issues/28))
+
+### Ci
+
+- Add checkov config and align dev/docs dependencies with ecs
+
 ## [1.4.0] - 2025-09-04
 
 ### Features
