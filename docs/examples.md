@@ -11,7 +11,7 @@ The smallest useful configuration: a role for one repository plus a read-only po
 ```hcl
 module "github_role" {
   source  = "registry.infrahouse.com/infrahouse/github-role/aws"
-  version = "1.4.0"
+  version = "1.5.0"
 
   gh_org_name = "infrahouse"
   repo_name   = "aws-control"
@@ -34,7 +34,7 @@ A role that may only run Terraform against one state bucket and one lock table:
 ```hcl
 module "github_role" {
   source  = "registry.infrahouse.com/infrahouse/github-role/aws"
-  version = "1.4.0"
+  version = "1.5.0"
 
   gh_org_name = "infrahouse"
   repo_name   = "aws-control"
@@ -98,7 +98,7 @@ workflow:
 ```hcl
 module "github_role" {
   source  = "registry.infrahouse.com/infrahouse/github-role/aws"
-  version = "1.4.0"
+  version = "1.5.0"
 
   gh_org_name          = "infrahouse"
   repo_name            = "data-pipeline"
@@ -122,7 +122,7 @@ Give the same repository two roles with different permissions and pick one per j
 ```hcl
 module "plan_role" {
   source  = "registry.infrahouse.com/infrahouse/github-role/aws"
-  version = "1.4.0"
+  version = "1.5.0"
 
   gh_org_name = "infrahouse"
   repo_name   = "aws-control"
@@ -131,7 +131,7 @@ module "plan_role" {
 
 module "apply_role" {
   source  = "registry.infrahouse.com/infrahouse/github-role/aws"
-  version = "1.4.0"
+  version = "1.5.0"
 
   gh_org_name = "infrahouse"
   repo_name   = "aws-control"
@@ -171,7 +171,7 @@ provider "aws" {
 
 module "staging_role" {
   source  = "registry.infrahouse.com/infrahouse/github-role/aws"
-  version = "1.4.0"
+  version = "1.5.0"
   providers = {
     aws = aws.staging
   }
@@ -182,7 +182,7 @@ module "staging_role" {
 
 module "production_role" {
   source  = "registry.infrahouse.com/infrahouse/github-role/aws"
-  version = "1.4.0"
+  version = "1.5.0"
   providers = {
     aws = aws.production
   }
@@ -199,7 +199,7 @@ Each account needs its own GitHub OIDC identity provider.
 ```hcl
 module "github_role" {
   source  = "registry.infrahouse.com/infrahouse/github-role/aws"
-  version = "1.4.0"
+  version = "1.5.0"
 
   gh_org_name = "infrahouse"
   repo_name   = "website"

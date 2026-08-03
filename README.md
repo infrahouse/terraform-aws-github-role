@@ -44,7 +44,7 @@ Writing the trust policy by hand is where GitHub OIDC setups usually go wrong: t
 ```hcl
 module "github_role" {
   source  = "registry.infrahouse.com/infrahouse/github-role/aws"
-  version = "1.4.0"
+  version = "1.5.0"
 
   gh_org_name = "infrahouse"
   repo_name   = "aws-control"

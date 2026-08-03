@@ -22,7 +22,7 @@ module small and lets you follow the principle of least privilege for every repo
 ```hcl
 module "github_role" {
   source  = "registry.infrahouse.com/infrahouse/github-role/aws"
-  version = "1.4.0"
+  version = "1.5.0"
 
   gh_org_name = "infrahouse"
   repo_name   = "aws-control"

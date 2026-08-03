@@ -36,7 +36,7 @@ The URL of the provider must be `https://token.actions.githubusercontent.com`.
 ```hcl
 module "github_role" {
   source  = "registry.infrahouse.com/infrahouse/github-role/aws"
-  version = "1.4.0"
+  version = "1.5.0"
 
   gh_org_name = "infrahouse"
   repo_name   = "aws-control"

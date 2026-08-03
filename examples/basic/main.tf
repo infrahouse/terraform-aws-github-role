@@ -6,7 +6,7 @@ provider "aws" {
 # See https://github.com/infrahouse/terraform-aws-gh-identity-provider
 module "github_role" {
   source  = "registry.infrahouse.com/infrahouse/github-role/aws"
-  version = "1.4.0"
+  version = "1.5.0"
 
   gh_org_name = var.gh_org_name
   repo_name   = var.repo_name
