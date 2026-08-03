@@ -1,4 +1,5 @@
-site_name: InfraHouse terraform-aws-github-role
+---
+site_name: InfraHouse github-role
 site_url: https://infrahouse.github.io/terraform-aws-github-role/
 site_description: Terraform module documentation
 site_author: InfraHouse
