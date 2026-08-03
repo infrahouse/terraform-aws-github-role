@@ -7,5 +7,6 @@ terraform.tfstate.backup
 __pycache__
 /tf-apply-trace.txt
 /tf-destroy-trace.txt
-.claude
 test_data/test_module/terraform.tf
+.claude/*.local.json
+.claude/reviews
