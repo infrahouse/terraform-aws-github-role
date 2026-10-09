@@ -67,6 +67,25 @@ resource "aws_iam_role_policy" "terraform_state" {
 }
 ```
 
+## Production Role Limited to `main`
+
+A role that pushes release images should not be available to every branch. Allow only workflows running on
+`main`:
+
+```hcl
+module "github_role_production" {
+  source  = "registry.infrahouse.com/infrahouse/github-role/aws"
+  version = "1.5.0"
+
+  gh_org_name    = "infrahouse"
+  repo_name      = "my-service"
+  subject_claims = ["ref:refs/heads/main"]
+}
+```
+
+If the deployment job sets `environment: production`, its token carries `environment:production` instead; allow
+that claim and protect the environment. See [Configuration](configuration.md#subject_claims).
+
 ## Several Repositories
 
 The trust policy covers a single repository, so create one role per repository:

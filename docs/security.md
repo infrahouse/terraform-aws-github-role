@@ -26,16 +26,40 @@ resource "aws_iam_role_policy" "artifacts" {
     Do not attach `AdministratorAccess`. Anyone who can merge — or run a workflow — in the repository then
     effectively owns the AWS account.
 
-## Any Workflow in the Repository Can Assume the Role
+## Narrow the Subject Claim
 
-The trust policy matches `repo:<org>/<repo>:*`, so any branch, tag, or pull request workflow **in that
-repository** can assume the role. Plan around it:
+By default the trust policy matches `repo:<org>/<repo>:*`, so any branch, tag, or pull request workflow
+**in that repository** can assume the role: the effective boundary is "anyone with push access", not
+"whatever ships through the default branch". That is fine for a role that reads state or runs
+`terraform plan`. For a role with production permissions (pushing images, updating services, applying
+infrastructure), narrow it with `subject_claims`:
+
+```hcl
+module "github_role" {
+  # source and version as in Getting Started
+  gh_org_name    = "infrahouse"
+  repo_name      = "my-service"
+  subject_claims = ["ref:refs/heads/main"]
+}
+```
+
+- `ref:refs/heads/main` admits only workflows running on `main`, so getting access means getting a change
+  merged. Pair it with branch protection that requires review.
+- `environment:production` is checked by GitHub before it issues the token, so it composes with the
+  environment's
+  [deployment protection rules](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments):
+  a deployment branch policy, and required reviewers where your GitHub plan offers them. Without such rules,
+  a job on any branch can name the environment, which makes it weaker than `ref:refs/heads/main`.
+
+The claim a job sends depends on how it runs; see [Configuration](configuration.md#subject_claims).
+
+Plan around what the trust policy allows:
 
 - **One role per repository.** Never share a role between repositories with different blast radii.
 - **One role per environment.** Separate `staging` and `production` roles, ideally in separate AWS accounts.
-- **Protect the apply path.** Use
+- **Protect the apply path.** Narrow `subject_claims`, and use branch protection on `main` and
   [GitHub environments](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments)
-  with required reviewers, and branch protection on `main`, so privileged workflows need human approval.
+  with protection rules, so privileged workflows need human approval.
 - **Review workflow changes like IAM changes.** A pull request that edits `.github/workflows/` can use every
   permission the role has.
 

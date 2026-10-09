@@ -70,8 +70,10 @@ Three things must line up for the assume-role call to succeed:
 2. **`aud` claim** — `sts.amazonaws.com`, the audience
    [`aws-actions/configure-aws-credentials`](https://github.com/aws-actions/configure-aws-credentials)
    requests by default.
-3. **`sub` claim** — identifies the workflow. The module matches any workflow of the given repository,
-   regardless of branch, tag, or environment (the trailing `:*`).
+3. **`sub` claim** — identifies the workflow. By default (`subject_claims = ["*"]`) the module matches any
+   workflow of the given repository, regardless of branch, tag, or environment (the trailing `:*`).
+   `subject_claims` replaces `*` with the suffixes you allow, such as `ref:refs/heads/main` — see
+   [Configuration](configuration.md#subject_claims).
 
 ## Subject Claim Formats
 

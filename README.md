@@ -25,6 +25,8 @@ Writing the trust policy by hand is where GitHub OIDC setups usually go wrong: t
 - **Gets the trust policy right** — federated principal, audience, and repository subject in one place
 - **Handles GitHub's immutable subject claims** — matches both `repo:org/repo:*` and the newer
   `repo:org@<org_id>/repo@<repo_id>:*` format that new and renamed repositories receive from 2026-07-15
+- **Narrows who can assume the role** — `subject_claims` limits it to, say, the default branch or one
+  environment, in both claim formats
 - **Stays unopinionated about permissions** — no bundled policies means no accidental over-privilege
 - **Names roles predictably** — `ih-tf-<repo_name>-github` by default, so roles are easy to audit across
   accounts
@@ -34,6 +36,7 @@ Writing the trust policy by hand is where GitHub OIDC setups usually go wrong: t
 
 - IAM role with a GitHub Actions OIDC trust policy, scoped to one `org/repo`
 - Support for legacy and immutable GitHub subject claims
+- Optional subject-claim narrowing (`subject_claims`; any workflow in the repository by default)
 - Optional custom role name (`role_name`)
 - Configurable session length (`max_session_duration`, 1 hour by default)
 - Outputs the role name and ARN for policy attachment and workflow configuration
@@ -148,7 +151,7 @@ More detail: [Security](https://infrahouse.github.io/terraform-aws-github-role/s
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 5.11, < 7.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.68.0 |
 
 ## Modules
 
@@ -170,6 +173,7 @@ No modules.
 | <a name="input_max_session_duration"></a> [max\_session\_duration](#input\_max\_session\_duration) | Maximum session duration in seconds for the IAM role. | `number` | `3600` | no |
 | <a name="input_repo_name"></a> [repo\_name](#input\_repo\_name) | Repository name in GitHub. Without the organization part. | `string` | n/a | yes |
 | <a name="input_role_name"></a> [role\_name](#input\_role\_name) | Name of the role. If left unset, the role name will be `ih-tf-var.repo_name-github`. | `string` | `null` | no |
+| <a name="input_subject_claims"></a> [subject\_claims](#input\_subject\_claims) | Subject claim suffixes allowed to assume the role: the part of the OIDC `sub` claim after `repo:<org>/<repo>:`.<br/>The default `["*"]` lets any workflow in the repository assume it. Narrow it for a role with production<br/>access, e.g. `["ref:refs/heads/main"]` or `["environment:production"]`. A job that names an environment gets<br/>an `environment:<name>` subject, not a `ref:` one. The module matches each suffix in both the legacy and the<br/>immutable repository-name format. | `list(string)` | <pre>[<br/>  "*"<br/>]</pre> | no |
 
 ## Outputs
 
