@@ -64,6 +64,12 @@ Makefile for the default region `us-west-2` and test role).
 module via `source = "../../"`. The test applies the config, then asserts via boto3 that the role exists,
 is named `ih-tf-test-github`, and that its trust policy carries both subject-claim patterns.
 
+All tests share that directory through `prepare_test_module()`, which also writes `subject_claims` into
+`terraform.tfvars` when a test passes it. `test_subject_claims_narrowed` applies with two claims and checks
+both name formats for each; `test_subject_claims_rejects_full_subject` only runs `terraform plan` and expects
+the variable's validation error. After a local run, `git checkout test_data/test_module/terraform.tfvars`
+restores the tracked copy.
+
 ## Versioning
 
 The module version is stamped in every place listed in `.bumpversion.cfg`: `locals.tf` (`module_version`,

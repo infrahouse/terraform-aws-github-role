@@ -20,6 +20,15 @@ variable "role_name" {
   default     = null
 }
 
+variable "subject_claims" {
+  description = <<-EOT
+    Subject claim suffixes allowed to assume the role. The default admits only workflows running on `main`;
+    use e.g. `["environment:production"]` if the deployment job runs in a protected environment.
+  EOT
+  type        = list(string)
+  default     = ["ref:refs/heads/main"]
+}
+
 variable "artifacts_bucket" {
   description = <<-EOT
     Name of an existing S3 bucket where the workflow publishes artifacts.

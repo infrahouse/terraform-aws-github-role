@@ -19,3 +19,26 @@ variable "max_session_duration" {
   type        = number
   default     = 3600
 }
+
+variable "subject_claims" {
+  description = <<-EOT
+    Subject claim suffixes allowed to assume the role: the part of the OIDC `sub` claim after `repo:<org>/<repo>:`.
+    The default `["*"]` lets any workflow in the repository assume it. Narrow it for a role with production
+    access, e.g. `["ref:refs/heads/main"]` or `["environment:production"]`. A job that names an environment gets
+    an `environment:<name>` subject, not a `ref:` one. The module matches each suffix in both the legacy and the
+    immutable repository-name format.
+  EOT
+  type        = list(string)
+  default     = ["*"]
+
+  validation {
+    condition = length(var.subject_claims) > 0 && alltrue([
+      for claim in var.subject_claims : claim != "" && !startswith(claim, "repo:")
+    ])
+    error_message = <<-EOT
+      subject_claims must be a non-empty list of claim suffixes such as "ref:refs/heads/main" or
+      "environment:production", without the "repo:<org>/<repo>:" prefix (the module adds it). Use ["*"] to allow
+      any workflow in the repository. Got: ${jsonencode(var.subject_claims)}
+    EOT
+  }
+}

@@ -8,6 +8,7 @@
 | `repo_name` | `string` | n/a | yes | Repository name without the organization part |
 | `role_name` | `string` | `null` | no | Role name. Defaults to `ih-tf-<repo_name>-github` |
 | `max_session_duration` | `number` | `3600` | no | Maximum session duration in seconds (AWS allows 3600–43200) |
+| `subject_claims` | `list(string)` | `["*"]` | no | Subject claim suffixes allowed to assume the role; `["*"]` allows any workflow |
 
 ### `gh_org_name`
 
@@ -61,6 +62,38 @@ The workflow must also ask for the longer session:
     aws-region: us-west-2
     role-duration-seconds: 7200
 ```
+
+### `subject_claims`
+
+Which workflows of the repository may assume the role. Each entry is the part of the OIDC `sub` claim after
+`repo:<org>/<repo>:`; the module adds that prefix in both the legacy and the immutable format, so you never
+write `repo:<org>@*/<repo>@*:` yourself. The default `["*"]` allows every workflow in the repository.
+
+Narrow it for a role with production access:
+
+```hcl
+subject_claims = ["ref:refs/heads/main"]       # workflows running on main
+subject_claims = ["environment:production"]    # jobs that run in the production environment
+```
+
+The suffix GitHub puts in the token depends on the job:
+
+| Job | Subject suffix |
+|-----|----------------|
+| Sets `environment: <name>` | `environment:<name>` |
+| Triggered by `pull_request` | `pull_request` |
+| Anything else (`push`, `workflow_dispatch`, `workflow_run`, `schedule`, ...) | `ref:refs/heads/<branch>` or `ref:refs/tags/<tag>` |
+
+So a job with `environment: production` that runs on `main` matches `environment:production`, not
+`ref:refs/heads/main`. Pick the claim your workflow actually sends.
+
+`ref:refs/heads/main` still lets anyone who can get a workflow onto `main` assume the role, which is why branch
+protection on `main` matters. `environment:production` is only as strong as the environment's protection
+rules: without a deployment branch policy, a job on any branch can name the environment. See
+[Security](security.md#narrow-the-subject-claim).
+
+Entries must not be empty or start with `repo:` (the module would produce a pattern that never matches), and
+the list must not be empty; the variable's validation rejects those.
 
 ## Outputs
 

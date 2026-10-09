@@ -50,6 +50,10 @@ through these in order:
 6. **Old module version after a repository rename.** Renamed repositories get immutable subject claims
    (`repo:org@<org_id>/repo@<repo_id>:*`). Module versions before that support only matched the legacy
    format — upgrade the module and re-apply.
+7. **`subject_claims` doesn't match the job.** The suffix depends on the job, not only the branch: a job that
+   sets `environment:` gets `environment:<name>`, a `pull_request` run gets `pull_request`, and other jobs get
+   `ref:refs/heads/<branch>` or `ref:refs/tags/<tag>`. A deploy job on `main` with `environment: production`
+   is rejected by `subject_claims = ["ref:refs/heads/main"]`. Allow the claim the job actually sends.
 
 To see the claim AWS actually received, print the subject in the workflow:
 

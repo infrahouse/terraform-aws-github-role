@@ -10,6 +10,8 @@ module "github_role" {
   repo_name            = var.repo_name
   role_name            = var.role_name
   max_session_duration = var.max_session_duration
+  # The role can write artifacts, so only the deployment workflow on main may assume it.
+  subject_claims = var.subject_claims
 }
 
 data "aws_s3_bucket" "artifacts" {
