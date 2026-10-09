@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.6.0] - 2026-10-09
+
+### Features
+
+- Add subject_claims to narrow the OIDC subject claim
+
 ## [1.5.0] - 2026-08-03
 
 ### Bug Fixes
